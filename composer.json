@@ -1,0 +1,25 @@
+{
+  "name": "a5ah1/meta-override",
+  "description": "A WordPress plugin to override meta tags, Open Graph data, and add Schema.org structured data",
+  "type": "wordpress-plugin",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "a5ah1",
+      "homepage": "https://github.com/a5ah1/meta-override"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "yahnis-elsts/plugin-update-checker": "^5.6"
+  },
+  "autoload": {
+    "classmap": [
+      "includes/"
+    ]
+  },
+  "config": {
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true
+  }
+}
