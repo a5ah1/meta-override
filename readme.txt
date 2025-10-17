@@ -2,7 +2,7 @@
 Contributors: a5ah1
 Tags: meta tags, open graph, twitter cards, schema, seo
 Requires at least: 5.0
-Tested up to: 6.7
+Tested up to: 6.8.3
 Requires PHP: 7.0
 Stable tag: 1.1.1
 License: MIT
