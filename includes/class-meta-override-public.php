@@ -131,12 +131,23 @@ class Meta_Override_Public
       echo '<meta property="og:description" content="' . esc_attr($og_description) . '">' . "\n";
     }
 
-    // OG Image (with dimensions if available)
-    if (!empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE])) {
-      echo '<meta property="og:image" content="' . esc_url($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE]) . '">' . "\n";
+    // Resolve OG image (featured image or custom)
+    $og_image_url = '';
+    $og_image_id = '';
+    if ($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED] === 'on' && has_post_thumbnail($post_id)) {
+      $og_image_id = get_post_thumbnail_id($post_id);
+      $og_image_url = get_the_post_thumbnail_url($post_id, 'full');
+    } else {
+      $og_image_url = $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE];
+      $og_image_id = $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID];
+    }
 
-      if (!empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID])) {
-        $image_dimensions = Meta_Override_Helper::get_image_dimensions($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID]);
+    // OG Image (with dimensions if available)
+    if (!empty($og_image_url)) {
+      echo '<meta property="og:image" content="' . esc_url($og_image_url) . '">' . "\n";
+
+      if (!empty($og_image_id)) {
+        $image_dimensions = Meta_Override_Helper::get_image_dimensions($og_image_id);
         if ($image_dimensions) {
           echo '<meta property="og:image:width" content="' . esc_attr($image_dimensions['width']) . '">' . "\n";
           echo '<meta property="og:image:height" content="' . esc_attr($image_dimensions['height']) . '">' . "\n";
@@ -177,8 +188,8 @@ class Meta_Override_Public
 
     // Twitter Image (with sync)
     $twitter_image = '';
-    if ($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE_SYNC] === 'on' && !empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE])) {
-      $twitter_image = $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE];
+    if ($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE_SYNC] === 'on' && !empty($og_image_url)) {
+      $twitter_image = $og_image_url;
     } elseif (!empty($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE])) {
       $twitter_image = $meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE];
     }
@@ -199,7 +210,7 @@ class Meta_Override_Public
     }
 
     // Output Schema.org JSON-LD
-    $this->output_schema_org($post_id, $is_blog_page, $canonical_url, $description, $meta_data);
+    $this->output_schema_org($post_id, $is_blog_page, $canonical_url, $description, $og_image_url, $og_image_id);
   }
 
   /**
@@ -209,11 +220,12 @@ class Meta_Override_Public
    * @param bool   $is_blog_page  Whether this is the blog page
    * @param string $canonical_url The canonical URL
    * @param string $description   The description to use
-   * @param array  $meta_data     The meta data array
+   * @param string $og_image_url  The resolved OG image URL
+   * @param mixed  $og_image_id   The resolved OG image attachment ID
    * @return void
    * @since 1.1.0
    */
-  private function output_schema_org($post_id, $is_blog_page, $canonical_url, $description, $meta_data)
+  private function output_schema_org($post_id, $is_blog_page, $canonical_url, $description, $og_image_url, $og_image_id)
   {
     $schema = array(
       '@context' => 'https://schema.org',
@@ -241,14 +253,14 @@ class Meta_Override_Public
     }
 
     // Add image if available
-    if (!empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE])) {
+    if (!empty($og_image_url)) {
       $schema['image'] = array(
         '@type' => 'ImageObject',
-        'url' => $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE]
+        'url' => $og_image_url
       );
 
-      if (!empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID])) {
-        $image_dimensions = Meta_Override_Helper::get_image_dimensions($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID]);
+      if (!empty($og_image_id)) {
+        $image_dimensions = Meta_Override_Helper::get_image_dimensions($og_image_id);
         if ($image_dimensions) {
           $schema['image']['width'] = $image_dimensions['width'];
           $schema['image']['height'] = $image_dimensions['height'];

@@ -8,8 +8,19 @@
   margin-bottom: 15px;
 }
 
+.mo-section label:not(.mo-checkbox) {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
 .mo-input {
   width: 100%;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.mo-input:disabled {
+  opacity: 0.5;
+  background-color: #f0f0f1;
 }
 
 .mo-char-count {
@@ -33,6 +44,10 @@
   border-bottom: 1px solid #eee;
 }
 
+.mo-group .mo-section:last-child {
+  margin-bottom: 0;
+}
+
 .mo-checkbox {
   display: flex;
   align-items: center;
@@ -42,6 +57,11 @@
 
 .mo-checkbox input[type="checkbox"] {
   margin-right: 5px;
+}
+
+.mo-notice {
+  font-size: 12px;
+  color: #d63638;
 }
 
 .mo-image-section {
@@ -59,6 +79,14 @@
 
 .mo-image-input-wrapper .mo-input {
   min-width: 0;
+}
+
+.mo-image-input-wrapper .button {
+  transition: opacity 0.2s ease;
+}
+
+.mo-image-input-wrapper .button:disabled {
+  opacity: 0.5;
 }
 
 .button {
@@ -80,13 +108,13 @@
   }
 }
 
-@media screen and (min-width: 1440px) {
+@media screen and (min-width: 1080px) {
   .meta-override-metabox {
     display: flex;
     flex-direction: column;
   }
 
-  .meta-override-metabox > .mo-section {
+  .meta-override-metabox > .mo-group {
     margin-bottom: 20px;
   }
 
@@ -96,7 +124,7 @@
     gap: 20px;
   }
 
-  .meta-override-metabox .mo-group {
+  .meta-override-metabox .mo-groups-wrapper .mo-group {
     margin-bottom: 0;
   }
 }

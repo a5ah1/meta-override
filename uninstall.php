@@ -29,6 +29,7 @@ function meta_override_delete_plugin_data()
     '_mo_og_description',
     '_mo_og_image',
     '_mo_og_image_id',
+    '_mo_og_image_use_featured',
     '_mo_twitter_title',
     '_mo_twitter_description',
     '_mo_twitter_image',

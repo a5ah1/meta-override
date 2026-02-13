@@ -4,7 +4,7 @@ Tags: meta tags, open graph, twitter cards, schema, seo
 Requires at least: 5.0
 Tested up to: 6.8.3
 Requires PHP: 7.0
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -116,6 +116,11 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 
 == Changelog ==
 
+= 1.2.0 =
+* Added "Use Featured Image" option for OG images — resolves at render time so changing the featured image updates OG/Twitter output automatically
+* Twitter image cascades naturally via existing "Same as OG Image" sync
+* Improved admin UI: consistent section grouping, bolder labels, clearer disabled field states with smooth transitions, and earlier side-by-side layout breakpoint
+
 = 1.1.1 =
 * Updated license to MIT
 * Added Author URI
@@ -134,6 +139,9 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 * Schema.org JSON-LD output
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+New "Use Featured Image" option for OG images. Featured image changes take effect without re-saving meta fields.
 
 = 1.1.1 =
 License updated to MIT. No functionality changes.
@@ -179,6 +187,7 @@ All meta data is stored with the `_mo_` prefix:
 * `_mo_og_description`
 * `_mo_og_image`
 * `_mo_og_image_id`
+* `_mo_og_image_use_featured`
 * `_mo_twitter_title`
 * `_mo_twitter_description`
 * `_mo_twitter_image`

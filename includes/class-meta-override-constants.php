@@ -24,6 +24,7 @@ class Meta_Override_Constants
   const FIELD_OG_DESCRIPTION = 'og_description';
   const FIELD_OG_IMAGE = 'og_image';
   const FIELD_OG_IMAGE_ID = 'og_image_id';
+  const FIELD_OG_IMAGE_USE_FEATURED = 'og_image_use_featured';
   const FIELD_TWITTER_TITLE = 'twitter_title';
   const FIELD_TWITTER_DESCRIPTION = 'twitter_description';
   const FIELD_TWITTER_IMAGE = 'twitter_image';
@@ -47,6 +48,7 @@ class Meta_Override_Constants
       self::FIELD_OG_DESCRIPTION,
       self::FIELD_OG_IMAGE,
       self::FIELD_OG_IMAGE_ID,
+      self::FIELD_OG_IMAGE_USE_FEATURED,
       self::FIELD_TWITTER_TITLE,
       self::FIELD_TWITTER_DESCRIPTION,
       self::FIELD_TWITTER_IMAGE,
@@ -78,6 +80,7 @@ class Meta_Override_Constants
   public static function get_checkbox_fields()
   {
     return array(
+      self::FIELD_OG_IMAGE_USE_FEATURED,
       self::FIELD_TWITTER_TITLE_SYNC,
       self::FIELD_TWITTER_DESCRIPTION_SYNC,
       self::FIELD_TWITTER_IMAGE_SYNC

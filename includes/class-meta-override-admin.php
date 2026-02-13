@@ -76,6 +76,15 @@ class Meta_Override_Admin
         $this->version,
         false
       );
+
+      $post_id = get_the_ID();
+      $featured_image_url = '';
+      if ($post_id && has_post_thumbnail($post_id)) {
+        $featured_image_url = get_the_post_thumbnail_url($post_id, 'full');
+      }
+      wp_localize_script($this->plugin_name, 'metaOverrideData', array(
+        'featuredImageUrl' => $featured_image_url ? $featured_image_url : '',
+      ));
     }
   }
 
@@ -133,15 +142,18 @@ class Meta_Override_Admin
 
 ?>
     <div class="meta-override-metabox">
-      <div class="mo-section">
-        <label for="meta_title">Meta Title</label>
-        <input type="text" id="meta_title" name="<?php echo Meta_Override_Constants::FIELD_META_TITLE; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_META_TITLE]); ?>" class="mo-input">
-        <span class="mo-char-count"></span>
-      </div>
-      <div class="mo-section">
-        <label for="meta_description">Meta Description</label>
-        <textarea id="meta_description" name="<?php echo Meta_Override_Constants::FIELD_META_DESCRIPTION; ?>" rows="3" class="mo-input"><?php echo esc_textarea($meta_data[Meta_Override_Constants::FIELD_META_DESCRIPTION]); ?></textarea>
-        <span class="mo-char-count"></span>
+      <div class="mo-group">
+        <h4>Meta Tags</h4>
+        <div class="mo-section">
+          <label for="meta_title">Meta Title</label>
+          <input type="text" id="meta_title" name="<?php echo Meta_Override_Constants::FIELD_META_TITLE; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_META_TITLE]); ?>" class="mo-input">
+          <span class="mo-char-count"></span>
+        </div>
+        <div class="mo-section">
+          <label for="meta_description">Meta Description</label>
+          <textarea id="meta_description" name="<?php echo Meta_Override_Constants::FIELD_META_DESCRIPTION; ?>" rows="3" class="mo-input"><?php echo esc_textarea($meta_data[Meta_Override_Constants::FIELD_META_DESCRIPTION]); ?></textarea>
+          <span class="mo-char-count"></span>
+        </div>
       </div>
 
       <div class="mo-groups-wrapper">
@@ -162,6 +174,13 @@ class Meta_Override_Admin
               <input type="hidden" id="og_image_id" name="<?php echo Meta_Override_Constants::FIELD_OG_IMAGE_ID; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID]); ?>">
               <button type="button" class="button" id="og_image_button">Choose Image</button>
             </div>
+            <label class="mo-checkbox">
+              <input type="checkbox" id="og_image_use_featured" name="<?php echo Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED; ?>" <?php checked($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED], 'on'); ?>>
+              Use Featured Image
+            </label>
+            <?php if (!has_post_thumbnail($post->ID)) : ?>
+              <span class="mo-notice">No featured image is set for this post.</span>
+            <?php endif; ?>
           </div>
         </div>
 

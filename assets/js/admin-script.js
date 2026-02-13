@@ -48,6 +48,42 @@
       customUploader.open();
     });
 
+    function toggleOgImageFeatured() {
+      var useFeatured = $('#og_image_use_featured').is(':checked');
+      var $ogImage = $('#og_image');
+      var $ogImageId = $('#og_image_id');
+      var $ogImageButton = $('#og_image_button');
+
+      if (useFeatured) {
+        // Store current custom values before overwriting
+        if (!$ogImage.data('customStored')) {
+          $ogImage.data('customUrl', $ogImage.val());
+          $ogImageId.data('customId', $ogImageId.val());
+          $ogImage.data('customStored', true);
+        }
+
+        $ogImage.val(metaOverrideData.featuredImageUrl);
+        $ogImageId.val('');
+        $ogImage.prop('disabled', true);
+        $ogImageId.prop('disabled', true);
+        $ogImageButton.prop('disabled', true);
+      } else {
+        // Restore custom values
+        if ($ogImage.data('customStored')) {
+          $ogImage.val($ogImage.data('customUrl'));
+          $ogImageId.val($ogImageId.data('customId'));
+          $ogImage.data('customStored', false);
+        }
+
+        $ogImage.prop('disabled', false);
+        $ogImageId.prop('disabled', false);
+        $ogImageButton.prop('disabled', false);
+      }
+
+      // Trigger change to cascade to Twitter sync
+      $ogImage.trigger('change');
+    }
+
     function toggleTwitterFields() {
       var titleSameAsOg = $('#twitter_title_same_as_og').is(':checked');
       var descriptionSameAsOg = $('#twitter_description_same_as_og').is(':checked');
@@ -70,10 +106,12 @@
       }
     }
 
+    $('#og_image_use_featured').change(toggleOgImageFeatured);
     $('#twitter_title_same_as_og, #twitter_description_same_as_og, #twitter_image_same_as_og').change(toggleTwitterFields);
     $('#og_title, #og_description').on('input', toggleTwitterFields);
     $('#og_image').on('input change', toggleTwitterFields);
 
+    toggleOgImageFeatured();
     toggleTwitterFields();
   });
 
