@@ -52,5 +52,8 @@ function meta_override_updates_init()
 
   // Set the branch that contains the stable release
   $updateChecker->setBranch('master');
+
+  // Use the attached ZIP asset from releases (includes vendor/ directory)
+  $updateChecker->getVcsApi()->enableReleaseAssets();
 }
 add_action('plugins_loaded', 'meta_override_updates_init');
