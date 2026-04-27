@@ -4,7 +4,7 @@ Tags: meta tags, open graph, twitter cards, schema, seo
 Requires at least: 5.0
 Tested up to: 6.8.3
 Requires PHP: 7.0
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -116,6 +116,9 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 
 == Changelog ==
 
+= 1.2.1 =
+* Moved the Meta Override meta box to the bottom of the post editor (priority changed from "high" to "low")
+
 = 1.2.0 =
 * Added "Use Featured Image" option for OG images — resolves at render time so changing the featured image updates OG/Twitter output automatically
 * Twitter image cascades naturally via existing "Same as OG Image" sync
@@ -139,6 +142,9 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 * Schema.org JSON-LD output
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Meta Override meta box now appears at the bottom of the post editor instead of the top.
 
 = 1.2.0 =
 New "Use Featured Image" option for OG images. Featured image changes take effect without re-saving meta fields.

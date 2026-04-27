@@ -122,7 +122,7 @@ class Meta_Override_Admin
         array($this, 'render_meta_box'),
         $post_type,
         'normal',
-        'high'
+        'low'
       );
     }
   }
