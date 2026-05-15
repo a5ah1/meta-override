@@ -87,62 +87,55 @@ class Meta_Override_Public
    */
   public function output_meta_tags()
   {
-    $post_id = $this->get_current_post_id();
+    $is_singular = is_singular();
     $is_blog_page = is_home();
+    $is_front_page = is_front_page();
 
-    if (!$post_id) {
+    if (!$is_singular && !$is_blog_page && !$is_front_page) {
       return;
     }
 
+    $post_id = $this->get_current_post_id(); // may be 0 on a posts-at-root home with no Posts page assigned
     $meta_data = Meta_Override_Helper::get_all_meta_data($post_id);
     $canonical_url = $this->get_canonical_url($post_id, $is_blog_page);
     $site_name = get_bloginfo('name');
 
-    // Output meta description (with fallback)
-    $description = !empty($meta_data[Meta_Override_Constants::FIELD_META_DESCRIPTION])
-      ? $meta_data[Meta_Override_Constants::FIELD_META_DESCRIPTION]
-      : Meta_Override_Helper::get_fallback_description($post_id);
-
-    if ($description) {
+    $description = $meta_data[Meta_Override_Constants::FIELD_META_DESCRIPTION];
+    if (!empty($description)) {
       echo '<meta name="description" content="' . esc_attr($description) . '">' . "\n";
     }
 
-    // Output Open Graph tags
-    $og_type = $is_blog_page ? 'website' : 'article';
+    $og_type = ($is_blog_page || !$post_id) ? 'website' : 'article';
     echo '<meta property="og:type" content="' . esc_attr($og_type) . '">' . "\n";
     echo '<meta property="og:url" content="' . esc_url($canonical_url) . '">' . "\n";
     echo '<meta property="og:site_name" content="' . esc_attr($site_name) . '">' . "\n";
 
-    // OG Title (with fallback)
-    $og_title = !empty($meta_data[Meta_Override_Constants::FIELD_OG_TITLE])
-      ? $meta_data[Meta_Override_Constants::FIELD_OG_TITLE]
-      : get_the_title($post_id);
-
-    if ($og_title) {
+    $og_title = $meta_data[Meta_Override_Constants::FIELD_OG_TITLE];
+    if (!empty($og_title)) {
       echo '<meta property="og:title" content="' . esc_attr($og_title) . '">' . "\n";
     }
 
-    // OG Description (with fallback)
-    $og_description = !empty($meta_data[Meta_Override_Constants::FIELD_OG_DESCRIPTION])
-      ? $meta_data[Meta_Override_Constants::FIELD_OG_DESCRIPTION]
-      : $description;
-
-    if ($og_description) {
+    $og_description = $meta_data[Meta_Override_Constants::FIELD_OG_DESCRIPTION];
+    if (!empty($og_description)) {
       echo '<meta property="og:description" content="' . esc_attr($og_description) . '">' . "\n";
     }
 
-    // Resolve OG image (featured image or custom)
+    // Resolve OG image: featured (if opted-in) → per-post → per-post-type fallback → site-wide fallback
     $og_image_url = '';
     $og_image_id = '';
-    if ($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED] === 'on' && has_post_thumbnail($post_id)) {
+    if ($post_id && $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED] === 'on' && has_post_thumbnail($post_id)) {
       $og_image_id = get_post_thumbnail_id($post_id);
       $og_image_url = get_the_post_thumbnail_url($post_id, 'full');
-    } else {
+    } elseif (!empty($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE])) {
       $og_image_url = $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE];
       $og_image_id = $meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID];
+    } else {
+      $post_type_for_fallback = $post_id ? get_post_type($post_id) : '';
+      $fallback = Meta_Override_Settings::get_og_image_fallback($post_type_for_fallback);
+      $og_image_url = $fallback['url'];
+      $og_image_id = $fallback['id'];
     }
 
-    // OG Image (with dimensions if available)
     if (!empty($og_image_url)) {
       echo '<meta property="og:image" content="' . esc_url($og_image_url) . '">' . "\n";
 
@@ -155,38 +148,35 @@ class Meta_Override_Public
       }
     }
 
-    // Output Twitter Card tags
     echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
 
-    // Twitter Title (with sync and fallback)
+    $twitter_site = Meta_Override_Settings::get_twitter_site();
+    if (!empty($twitter_site)) {
+      echo '<meta name="twitter:site" content="' . esc_attr($twitter_site) . '">' . "\n";
+    }
+
     $twitter_title = '';
     if ($meta_data[Meta_Override_Constants::FIELD_TWITTER_TITLE_SYNC] === 'on') {
       $twitter_title = $og_title;
     } elseif (!empty($meta_data[Meta_Override_Constants::FIELD_TWITTER_TITLE])) {
       $twitter_title = $meta_data[Meta_Override_Constants::FIELD_TWITTER_TITLE];
-    } else {
-      $twitter_title = $og_title; // Fallback to OG title
     }
 
-    if ($twitter_title) {
+    if (!empty($twitter_title)) {
       echo '<meta name="twitter:title" content="' . esc_attr($twitter_title) . '">' . "\n";
     }
 
-    // Twitter Description (with sync and fallback)
     $twitter_description = '';
     if ($meta_data[Meta_Override_Constants::FIELD_TWITTER_DESCRIPTION_SYNC] === 'on') {
       $twitter_description = $og_description;
     } elseif (!empty($meta_data[Meta_Override_Constants::FIELD_TWITTER_DESCRIPTION])) {
       $twitter_description = $meta_data[Meta_Override_Constants::FIELD_TWITTER_DESCRIPTION];
-    } else {
-      $twitter_description = $og_description; // Fallback to OG description
     }
 
-    if ($twitter_description) {
+    if (!empty($twitter_description)) {
       echo '<meta name="twitter:description" content="' . esc_attr($twitter_description) . '">' . "\n";
     }
 
-    // Twitter Image (with sync)
     $twitter_image = '';
     if ($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE_SYNC] === 'on' && !empty($og_image_url)) {
       $twitter_image = $og_image_url;
@@ -194,12 +184,12 @@ class Meta_Override_Public
       $twitter_image = $meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE];
     }
 
-    if ($twitter_image) {
+    if (!empty($twitter_image)) {
       echo '<meta name="twitter:image" content="' . esc_url($twitter_image) . '">' . "\n";
     }
 
-    // Output date meta tags (only for singular posts/pages, not blog archive)
-    if (!$is_blog_page) {
+    // Date meta tags only for singular posts/pages with a real post_id
+    if ($post_id && !$is_blog_page) {
       $publish_date = get_the_date('Y-m-d', $post_id);
       $publish_time = get_the_date('Y-m-d\TH:i:s\Z', $post_id);
       $modified_time = get_the_modified_date('Y-m-d\TH:i:s\Z', $post_id);
@@ -209,7 +199,6 @@ class Meta_Override_Public
       echo '<meta property="article:modified_time" content="' . esc_attr($modified_time) . '">' . "\n";
     }
 
-    // Output Schema.org JSON-LD
     $this->output_schema_org($post_id, $is_blog_page, $canonical_url, $description, $og_image_url, $og_image_id);
   }
 
@@ -229,20 +218,19 @@ class Meta_Override_Public
   {
     $schema = array(
       '@context' => 'https://schema.org',
-      '@type' => $is_blog_page ? 'CollectionPage' : 'WebPage',
+      '@type' => ($is_blog_page || !$post_id) ? 'CollectionPage' : 'WebPage',
       'name' => wp_get_document_title(),
-      'description' => $description,
       'url' => $canonical_url,
     );
 
-    // Add date info only for non-blog pages
-    if (!$is_blog_page) {
-      $publish_time = get_the_date('c', $post_id); // ISO 8601 format
-      $modified_time = get_the_modified_date('c', $post_id);
-      $schema['datePublished'] = $publish_time;
-      $schema['dateModified'] = $modified_time;
+    if (!empty($description)) {
+      $schema['description'] = $description;
+    }
 
-      // Add author information for articles
+    if ($post_id && !$is_blog_page) {
+      $schema['datePublished'] = get_the_date('c', $post_id);
+      $schema['dateModified'] = get_the_modified_date('c', $post_id);
+
       $author_id = get_post_field('post_author', $post_id);
       if ($author_id) {
         $schema['author'] = array(

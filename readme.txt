@@ -4,7 +4,7 @@ Tags: meta tags, open graph, twitter cards, schema, seo
 Requires at least: 5.0
 Tested up to: 6.8.3
 Requires PHP: 7.0
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -59,15 +59,13 @@ Meta Override provides several filters for extensibility:
 * `meta_override_supported_post_types` - Add support for custom post types
 * `meta_override_schema_org` - Modify Schema.org output
 
-= Intelligent Fallbacks =
+= Resolution rules =
 
-When custom values aren't provided, Meta Override uses intelligent fallback chains:
+Meta Override emits tags only when an explicit value is available, with one exception:
 
-* Meta Description: Custom value → Post excerpt → Site tagline
-* Open Graph Title: Custom value → Post title
-* Twitter Cards: Custom value → Synced OG value → OG value
-
-This ensures your pages always have proper meta tags even if you haven't customized them yet.
+* Meta Description, OG Title, OG Description, Twitter Title, Twitter Description: emitted only when set on the post. If blank, the tag is omitted.
+* Open Graph Image (cascades): "Use Featured Image" on the post → per-post OG Image field → per-post-type fallback (Settings → Meta Override) → site-wide fallback → omit.
+* Twitter title/description/image with the "Same as OG…" checkbox: mirrors the resolved OG value, or is omitted if the OG value is blank.
 
 == Installation ==
 
@@ -116,6 +114,16 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 
 == Changelog ==
 
+= 1.3.0 =
+* Added Settings → Meta Override page for site-wide configuration, with contextual help tabs (Overview, Settings reference, Developers)
+* Added site-wide OG image fallback used when a post has no featured image and no per-post OG image
+* Added per-post-type OG image fallback (driven by `meta_override_supported_post_types`)
+* Added `twitter:site` handle setting, emitted as `<meta name="twitter:site">` on every page
+* Added homepage emission on sites configured with the default "Show latest posts" home (no Posts page assigned)
+* Added "Settings" link to the Plugins list row
+* **Behavior change**: `meta description`, `og:title`, `og:description`, `twitter:title`, and `twitter:description` now emit only when set on the post. Previously these auto-filled from post excerpt, post title, or site tagline. If you relied on the previous auto-fill, set those fields explicitly or expect the tags to be absent
+* Schema.org JSON-LD omits the `description` key when no explicit description is set
+
 = 1.2.1 =
 * Moved the Meta Override meta box to the bottom of the post editor (priority changed from "high" to "low")
 
@@ -142,6 +150,9 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 * Schema.org JSON-LD output
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+New Settings page with site-wide and per-post-type OG image fallbacks, plus a twitter:site handle. **Behavior change**: meta description, og:title, og:description, and Twitter title/description are now emitted only when set on the post. If you relied on the previous auto-fill (post excerpt, post title, site tagline), set those fields explicitly or those tags will be absent.
 
 = 1.2.1 =
 Meta Override meta box now appears at the bottom of the post editor instead of the top.

@@ -17,11 +17,11 @@
       updateCharCount(this);
     });
 
-    $('#og_image_button, #twitter_image_button').click(function (e) {
+    $(document).on('click', '.mo-image-picker-button', function (e) {
       e.preventDefault();
 
       var buttonId = $(this).attr('id');
-      var inputId = buttonId.replace('_button', '');
+      var inputId = buttonId.replace(/_button$/, '');
       var imageIdInputId = inputId + '_id';
 
       // Always create a new media uploader to ensure correct button context

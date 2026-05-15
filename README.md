@@ -10,13 +10,13 @@ A WordPress plugin that allows you to override meta tags, Open Graph data, Twitt
 ### Meta Tag Management
 - Override document titles and meta descriptions on a per-post/page basis
 - Character counter for meta fields to help with SEO best practices
-- Automatic fallbacks when custom values aren't set (uses post title, excerpt, etc.)
+- Tags emit only when an explicit value is set — no synthesized defaults
 
 ### Open Graph Support
 - Custom Open Graph titles, descriptions, and images
 - Automatic image dimensions in meta tags
 - WordPress Media Library integration for easy image selection
-- Fallback to post data when custom values aren't provided
+- Site-wide and per-post-type OG image fallbacks via the Settings page
 
 ### Twitter Card Integration
 - Custom Twitter Card titles, descriptions, and images
@@ -155,41 +155,41 @@ add_filter('meta_override_schema_org', function($schema, $post_id) {
 
 ## Helper Functions
 
-While the plugin is designed to work automatically, developers can access helper methods:
+Developers can access helper methods:
 
 ```php
 // Get all meta data for a post (with caching)
 $meta_data = Meta_Override_Helper::get_all_meta_data($post_id);
 
-// Get fallback title if custom title isn't set
-$title = Meta_Override_Helper::get_fallback_title($post_id);
+// Validate an attachment ID — returns int (0 if not a valid image attachment)
+$id = Meta_Override_Helper::sanitize_image_id($id);
 
-// Get fallback description if custom description isn't set
-$description = Meta_Override_Helper::get_fallback_description($post_id);
+// Get the filtered list of supported post types
+$types = Meta_Override_Helper::get_supported_post_types();
 
-// Clear cache for a specific post
+// Get image dimensions for an attachment (memoized per request)
+$dims = Meta_Override_Helper::get_image_dimensions($image_id);
+
+// Clear meta cache for a specific post
 Meta_Override_Helper::clear_cache($post_id);
 ```
 
-## SEO Fallback Chain
+## Resolution Rules
 
-When custom values aren't provided, Meta Override intelligently falls back to default WordPress content:
+Meta Override emits tags only when an explicit value is available. The OG image is the one tag with a multi-level fallback.
 
-### Meta Description Priority
-1. Custom `_mo_meta_description` (if set)
-2. Post excerpt (if available)
-3. Site tagline
+### Meta description, OG title/description, Twitter title/description
+Emitted only when set on the post. If blank, the tag is omitted entirely.
 
-### Open Graph Title Priority
-1. Custom `_mo_og_title` (if set)
-2. Post title
+### OG Image (cascading)
+1. Featured image — when "Use Featured Image" is checked on the post
+2. Per-post `_mo_og_image`
+3. Per-post-type fallback (Settings → Meta Override)
+4. Site-wide fallback (Settings → Meta Override)
+5. Otherwise: no `og:image` tag
 
-### Twitter Card Priority
-1. Custom Twitter-specific value (if set)
-2. Synced Open Graph value (if sync checkbox enabled)
-3. Falls back to Open Graph value
-
-This ensures your pages always have proper meta tags even if you haven't customized them yet.
+### Twitter sync behavior
+When "Same as OG…" is checked on the post, the Twitter tag mirrors the resolved OG tag. If the corresponding OG tag has no value, the Twitter tag is skipped too.
 
 ## Database Storage
 
@@ -235,11 +235,11 @@ Meta Override outputs its tags with high priority. If you're using another SEO p
 
 ### What if I don't fill in all the fields?
 
-No problem! The plugin provides intelligent fallbacks using your post title, excerpt, and WordPress defaults.
+Most tags (meta description, OG/Twitter title and description) are omitted when no value is set — Meta Override does not synthesize defaults. The OG image is the one exception: it cascades from the post field → per-post-type fallback → site-wide fallback. Configure the fallbacks at *Settings → Meta Override*.
 
 ### Can I use this for the blog homepage?
 
-Yes! The plugin automatically detects the "Posts page" setting in WordPress and allows you to override meta tags for it.
+Yes. The plugin emits core OG scaffolding plus your site-wide fallbacks on both kinds of WordPress blog homes: a "Posts page" assigned via Reading Settings, and the default "Show latest posts" front page.
 
 ### Does this affect my site's performance?
 

@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Meta Override
  * Description: A plugin to override meta tags, Open Graph data, and add Schema.org structured data.
- * Version: 1.2.1
+ * Version: 1.3.0
  * Author: a5ah1
  * Author URI: https://github.com/a5ah1/meta-override
  * License: MIT
@@ -15,7 +15,8 @@ if (!defined('WPINC')) {
   die;
 }
 
-define('META_OVERRIDE_VERSION', '1.2.1');
+define('META_OVERRIDE_VERSION', '1.3.0');
+define('META_OVERRIDE_PLUGIN_FILE', __FILE__);
 define('META_OVERRIDE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('META_OVERRIDE_PLUGIN_URL', plugin_dir_url(__FILE__));
 

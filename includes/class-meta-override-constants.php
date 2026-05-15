@@ -16,6 +16,19 @@ class Meta_Override_Constants
   const META_PREFIX = '_mo_';
 
   /**
+   * Option name where site-wide settings are stored (single array option)
+   */
+  const SETTINGS_OPTION = 'meta_override_settings';
+
+  /**
+   * Settings keys (used inside the SETTINGS_OPTION array)
+   */
+  const SETTING_OG_IMAGE_URL = 'og_image_url';
+  const SETTING_OG_IMAGE_ID = 'og_image_id';
+  const SETTING_OG_IMAGE_BY_POST_TYPE = 'og_image_by_post_type';
+  const SETTING_TWITTER_SITE = 'twitter_site';
+
+  /**
    * Field name constants
    */
   const FIELD_META_TITLE = 'meta_title';

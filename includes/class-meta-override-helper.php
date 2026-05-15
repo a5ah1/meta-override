@@ -19,6 +19,13 @@ class Meta_Override_Helper
   private static $meta_cache = array();
 
   /**
+   * Cache for image dimensions keyed by attachment ID
+   *
+   * @var array
+   */
+  private static $dimensions_cache = array();
+
+  /**
    * Get all meta data for a post with caching
    *
    * @param int $post_id The post ID
@@ -28,7 +35,10 @@ class Meta_Override_Helper
   public static function get_all_meta_data($post_id)
   {
     if (!$post_id) {
-      return array();
+      // Return an array shaped like real meta data but with empty values so
+      // callers can read field keys without isset() checks (e.g. on the
+      // homepage when there is no associated post).
+      return array_fill_keys(Meta_Override_Constants::get_all_fields(), '');
     }
 
     // Check cache first
@@ -61,20 +71,26 @@ class Meta_Override_Helper
       return false;
     }
 
-    // Verify this is actually an image attachment
-    if (wp_attachment_is_image($image_id) === false) {
-      return false;
+    $image_id = (int) $image_id;
+
+    if (array_key_exists($image_id, self::$dimensions_cache)) {
+      return self::$dimensions_cache[$image_id];
     }
 
-    $image_data = wp_get_attachment_image_src($image_id, 'full');
-    if ($image_data && isset($image_data[1], $image_data[2])) {
-      return array(
-        'width' => $image_data[1],
-        'height' => $image_data[2]
-      );
+    $result = false;
+
+    if (wp_attachment_is_image($image_id)) {
+      $image_data = wp_get_attachment_image_src($image_id, 'full');
+      if ($image_data && isset($image_data[1], $image_data[2])) {
+        $result = array(
+          'width' => $image_data[1],
+          'height' => $image_data[2],
+        );
+      }
     }
 
-    return false;
+    self::$dimensions_cache[$image_id] = $result;
+    return $result;
   }
 
   /**
@@ -115,44 +131,34 @@ class Meta_Override_Helper
   }
 
   /**
-   * Get fallback meta title for a post
+   * Validate an attachment ID and return it as int, or 0 if invalid
    *
-   * @param int $post_id The post ID
-   * @return string The fallback title
-   * @since 1.1.0
+   * @param mixed $id Raw image ID input
+   * @return int Valid image attachment ID, or 0
+   * @since 1.3.0
    */
-  public static function get_fallback_title($post_id)
+  public static function sanitize_image_id($id)
   {
-    if (!$post_id) {
-      return get_bloginfo('name');
-    }
-
-    $post = get_post($post_id);
-    if (!$post) {
-      return get_bloginfo('name');
-    }
-
-    return get_the_title($post_id) . ' - ' . get_bloginfo('name');
+    $id = absint($id);
+    return ($id && wp_attachment_is_image($id)) ? $id : 0;
   }
 
   /**
-   * Get fallback meta description for a post
+   * Get the list of post types Meta Override supports
    *
-   * @param int $post_id The post ID
-   * @return string The fallback description
-   * @since 1.1.0
+   * Single source of truth — both admin meta box and settings page consult this.
+   *
+   * @return array
+   * @since 1.3.0
    */
-  public static function get_fallback_description($post_id)
+  public static function get_supported_post_types()
   {
-    if (!$post_id) {
-      return get_bloginfo('description');
-    }
-
-    $excerpt = get_the_excerpt($post_id);
-    if ($excerpt) {
-      return wp_strip_all_tags($excerpt);
-    }
-
-    return get_bloginfo('description');
+    /**
+     * Filter the post types that support Meta Override
+     *
+     * @param array $post_types Array of post type slugs
+     * @since 1.1.0
+     */
+    return apply_filters('meta_override_supported_post_types', array('post', 'page'));
   }
 }

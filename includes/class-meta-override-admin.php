@@ -96,13 +96,7 @@ class Meta_Override_Admin
    */
   private function get_supported_post_types()
   {
-    /**
-     * Filter the post types that support Meta Override
-     *
-     * @param array $post_types Array of post type slugs
-     * @since 1.1.0
-     */
-    return apply_filters('meta_override_supported_post_types', array('post', 'page'));
+    return Meta_Override_Helper::get_supported_post_types();
   }
 
   /**
@@ -172,7 +166,7 @@ class Meta_Override_Admin
             <div class="mo-image-input-wrapper">
               <input type="text" id="og_image" name="<?php echo Meta_Override_Constants::FIELD_OG_IMAGE; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE]); ?>" class="mo-input">
               <input type="hidden" id="og_image_id" name="<?php echo Meta_Override_Constants::FIELD_OG_IMAGE_ID; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_ID]); ?>">
-              <button type="button" class="button" id="og_image_button">Choose Image</button>
+              <button type="button" class="button mo-image-picker-button" id="og_image_button">Choose Image</button>
             </div>
             <label class="mo-checkbox">
               <input type="checkbox" id="og_image_use_featured" name="<?php echo Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED; ?>" <?php checked($meta_data[Meta_Override_Constants::FIELD_OG_IMAGE_USE_FEATURED], 'on'); ?>>
@@ -207,7 +201,7 @@ class Meta_Override_Admin
             <div class="mo-image-input-wrapper">
               <input type="text" id="twitter_image" name="<?php echo Meta_Override_Constants::FIELD_TWITTER_IMAGE; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE]); ?>" class="mo-input">
               <input type="hidden" id="twitter_image_id" name="<?php echo Meta_Override_Constants::FIELD_TWITTER_IMAGE_ID; ?>" value="<?php echo esc_attr($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE_ID]); ?>">
-              <button type="button" class="button" id="twitter_image_button">Choose Image</button>
+              <button type="button" class="button mo-image-picker-button" id="twitter_image_button">Choose Image</button>
             </div>
             <label class="mo-checkbox">
               <input type="checkbox" id="twitter_image_same_as_og" name="<?php echo Meta_Override_Constants::FIELD_TWITTER_IMAGE_SYNC; ?>" <?php checked($meta_data[Meta_Override_Constants::FIELD_TWITTER_IMAGE_SYNC], 'on'); ?>>

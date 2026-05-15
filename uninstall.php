@@ -49,6 +49,9 @@ function meta_override_delete_plugin_data()
     );
   }
 
+  // Delete site-wide settings option
+  delete_option('meta_override_settings');
+
   // Clear any cached data
   wp_cache_flush();
 }

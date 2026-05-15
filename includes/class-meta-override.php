@@ -64,6 +64,7 @@ class Meta_Override
     require_once META_OVERRIDE_PLUGIN_DIR . 'includes/class-meta-override-admin.php';
     require_once META_OVERRIDE_PLUGIN_DIR . 'includes/class-meta-override-public.php';
     require_once META_OVERRIDE_PLUGIN_DIR . 'includes/class-meta-override-helper.php';
+    require_once META_OVERRIDE_PLUGIN_DIR . 'includes/class-meta-override-settings.php';
 
     $this->loader = new Meta_Override_Loader();
   }
@@ -82,6 +83,12 @@ class Meta_Override
     $this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
     $this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_meta_boxes');
     $this->loader->add_action('save_post', $plugin_admin, 'save_meta_data');
+
+    $plugin_settings = new Meta_Override_Settings($this->get_plugin_name(), $this->get_version());
+    $this->loader->add_action('admin_init', $plugin_settings, 'register_settings');
+    $this->loader->add_action('admin_menu', $plugin_settings, 'add_settings_page');
+    $this->loader->add_action('admin_enqueue_scripts', $plugin_settings, 'enqueue_assets');
+    $this->loader->add_filter('plugin_action_links_' . plugin_basename(META_OVERRIDE_PLUGIN_FILE), $plugin_settings, 'add_plugin_action_links');
   }
 
   /**
