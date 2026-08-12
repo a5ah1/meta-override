@@ -14,6 +14,9 @@ class Meta_Override_Helper
   /**
    * Cache for meta data to avoid multiple database queries
    *
+   * Keyed "{object_type}:{object_id}" — a bare ID would let post 12 and
+   * term 12 collide and serve each other's meta.
+   *
    * @var array
    */
   private static $meta_cache = array();
@@ -34,26 +37,66 @@ class Meta_Override_Helper
    */
   public static function get_all_meta_data($post_id)
   {
-    if (!$post_id) {
+    return self::get_object_meta_data($post_id, Meta_Override_Constants::OBJECT_POST);
+  }
+
+  /**
+   * Get all meta data for a term with caching
+   *
+   * @param int $term_id The term ID
+   * @return array Array of meta field values
+   * @since 2.0.0
+   */
+  public static function get_all_term_meta_data($term_id)
+  {
+    return self::get_object_meta_data($term_id, Meta_Override_Constants::OBJECT_TERM);
+  }
+
+  /**
+   * Get all meta data for a post or term with caching
+   *
+   * Always returns the full field shape — fields that don't apply to the
+   * object type come back empty — so callers can read any key without
+   * isset() checks regardless of what they were handed.
+   *
+   * @param int    $object_id   The post or term ID
+   * @param string $object_type Meta_Override_Constants::OBJECT_POST or OBJECT_TERM
+   * @return array Array of meta field values
+   * @since 2.0.0
+   */
+  public static function get_object_meta_data($object_id, $object_type = Meta_Override_Constants::OBJECT_POST)
+  {
+    $all_fields = Meta_Override_Constants::get_all_fields();
+
+    if (!$object_id) {
       // Return an array shaped like real meta data but with empty values so
       // callers can read field keys without isset() checks (e.g. on the
       // homepage when there is no associated post).
-      return array_fill_keys(Meta_Override_Constants::get_all_fields(), '');
+      return array_fill_keys($all_fields, '');
     }
+
+    $cache_key = $object_type . ':' . (int) $object_id;
 
     // Check cache first
-    if (isset(self::$meta_cache[$post_id])) {
-      return self::$meta_cache[$post_id];
+    if (isset(self::$meta_cache[$cache_key])) {
+      return self::$meta_cache[$cache_key];
     }
 
-    $meta_data = array();
-    foreach (Meta_Override_Constants::get_all_fields() as $field) {
+    $is_term = ($object_type === Meta_Override_Constants::OBJECT_TERM);
+    $readable = $is_term
+      ? Meta_Override_Constants::get_term_fields()
+      : $all_fields;
+
+    $meta_data = array_fill_keys($all_fields, '');
+    foreach ($readable as $field) {
       $meta_key = Meta_Override_Constants::get_meta_key($field);
-      $meta_data[$field] = get_post_meta($post_id, $meta_key, true);
+      $meta_data[$field] = $is_term
+        ? get_term_meta($object_id, $meta_key, true)
+        : get_post_meta($object_id, $meta_key, true);
     }
 
     // Cache the result
-    self::$meta_cache[$post_id] = $meta_data;
+    self::$meta_cache[$cache_key] = $meta_data;
 
     return $meta_data;
   }
@@ -94,16 +137,17 @@ class Meta_Override_Helper
   }
 
   /**
-   * Clear meta cache for a specific post or all posts
+   * Clear meta cache for a specific object or all objects
    *
-   * @param int|null $post_id Optional post ID. If null, clears all cache.
+   * @param int|null $object_id   Optional object ID. If null, clears all cache.
+   * @param string   $object_type Object type the ID belongs to
    * @return void
    * @since 1.1.0
    */
-  public static function clear_cache($post_id = null)
+  public static function clear_cache($object_id = null, $object_type = Meta_Override_Constants::OBJECT_POST)
   {
-    if ($post_id) {
-      unset(self::$meta_cache[$post_id]);
+    if ($object_id) {
+      unset(self::$meta_cache[$object_type . ':' . (int) $object_id]);
     } else {
       self::$meta_cache = array();
     }
@@ -122,7 +166,8 @@ class Meta_Override_Helper
     if (in_array($field, Meta_Override_Constants::get_checkbox_fields(), true)) {
       return $value ? 'on' : 'off';
     } elseif (in_array($field, Meta_Override_Constants::get_url_fields(), true)) {
-      return esc_url_raw($value);
+      // esc_url_raw() fatals on an array; a crafted POST can send one.
+      return is_scalar($value) ? esc_url_raw((string) $value) : '';
     } elseif (in_array($field, Meta_Override_Constants::get_textarea_fields(), true)) {
       return sanitize_textarea_field($value);
     } else {
@@ -146,19 +191,85 @@ class Meta_Override_Helper
   /**
    * Get the list of post types Meta Override supports
    *
-   * Single source of truth — both admin meta box and settings page consult this.
+   * Single source of truth — the admin meta box, the save guard, the settings
+   * page and the front-end output all consult this. The stored setting supplies
+   * the list; the filter runs last so code can still add or remove types.
    *
    * @return array
    * @since 1.3.0
    */
   public static function get_supported_post_types()
   {
+    $post_types = Meta_Override_Settings::get_post_types();
+
     /**
      * Filter the post types that support Meta Override
+     *
+     * Runs after the stored setting, so a type added here is enabled even if
+     * its box is unticked on the settings screen (and shows as locked there).
      *
      * @param array $post_types Array of post type slugs
      * @since 1.1.0
      */
-    return apply_filters('meta_override_supported_post_types', array('post', 'page'));
+    $post_types = apply_filters('meta_override_supported_post_types', $post_types);
+
+    return is_array($post_types) ? array_values(array_unique($post_types)) : array();
+  }
+
+  /**
+   * Get the list of taxonomies Meta Override supports
+   *
+   * @return array
+   * @since 2.0.0
+   */
+  public static function get_supported_taxonomies()
+  {
+    $taxonomies = Meta_Override_Settings::get_taxonomies();
+
+    /**
+     * Filter the taxonomies that support Meta Override
+     *
+     * Runs after the stored setting, mirroring
+     * meta_override_supported_post_types.
+     *
+     * @param array $taxonomies Array of taxonomy slugs
+     * @since 2.0.0
+     */
+    $taxonomies = apply_filters('meta_override_supported_taxonomies', $taxonomies);
+
+    return is_array($taxonomies) ? array_values(array_unique($taxonomies)) : array();
+  }
+
+  /**
+   * Get the post types offered on the settings screen
+   *
+   * @return array Array of WP_Post_Type objects keyed by slug
+   * @since 2.0.0
+   */
+  public static function get_candidate_post_types()
+  {
+    $candidates = get_post_types(array('public' => true, 'show_ui' => true), 'objects');
+
+    // Attachments qualify on both flags but a meta box in the media modal is
+    // not something anyone wants.
+    unset($candidates['attachment']);
+
+    return $candidates;
+  }
+
+  /**
+   * Get the taxonomies offered on the settings screen
+   *
+   * @return array Array of WP_Taxonomy objects keyed by slug
+   * @since 2.0.0
+   */
+  public static function get_candidate_taxonomies()
+  {
+    $candidates = get_taxonomies(array('public' => true, 'show_ui' => true), 'objects');
+
+    // Public, but meaningless as a shareable archive.
+    unset($candidates['post_format']);
+
+    return $candidates;
   }
 }

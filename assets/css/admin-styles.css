@@ -64,7 +64,9 @@
   color: #d63638;
 }
 
-.mo-image-section {
+/* div contexts only — this class also lands on <tr>s in the term edit
+   form-table, where display: grid would tear the row out of the table. */
+div.mo-image-section {
   display: grid;
   grid-template-columns: 1fr;
   gap: 5px;
@@ -152,4 +154,73 @@
 .meta-override-settings > .description {
   margin-bottom: 20px;
   max-width: 720px;
+}
+
+.meta-override-settings .mo-subgroup {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.meta-override-settings .mo-subgroup:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.meta-override-settings .mo-subgroup h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+/* Post type / taxonomy selection */
+.mo-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px 20px;
+  margin-top: 8px;
+}
+
+.mo-checkbox-grid .mo-checkbox {
+  margin-top: 0;
+  gap: 6px;
+}
+
+.mo-checkbox-grid .mo-checkbox code {
+  font-size: 11px;
+  color: #666;
+  background: #f0f0f1;
+  padding: 1px 4px;
+}
+
+.mo-checkbox-grid .mo-checkbox input:disabled + span {
+  opacity: 0.7;
+}
+
+.mo-locked {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #646970;
+  border: 1px solid #dcdcde;
+  border-radius: 2px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+/* Term add/edit screens */
+.mo-term-fields .mo-image-input-wrapper {
+  max-width: 95%;
+}
+
+.form-field.mo-image-section .mo-image-input-wrapper,
+tr.mo-image-section .mo-image-input-wrapper {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-field .mo-char-count {
+  display: block;
 }

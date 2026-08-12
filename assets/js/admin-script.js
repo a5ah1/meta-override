@@ -111,6 +111,35 @@
     $('#og_title, #og_description').on('input', toggleTwitterFields);
     $('#og_image').on('input change', toggleTwitterFields);
 
+    // An attachment ID only describes the picked file — blanking the URL by
+    // hand must not leave the stale ID behind to be saved.
+    $(document).on('input', '.mo-image-input-wrapper input[type="text"]', function () {
+      if ($(this).val() === '') {
+        $(this).siblings('input[type="hidden"]').val('');
+      }
+    });
+
+    // After the add-term AJAX succeeds, core resets only the visible text
+    // fields in #addtag. Our hidden attachment IDs and the sync checkboxes
+    // survive and would leak into the next term created without a reload.
+    $(document).ajaxSuccess(function (event, xhr, settings) {
+      if (typeof (settings && settings.data) !== 'string' || settings.data.indexOf('action=add-tag') === -1) {
+        return;
+      }
+      var $form = $('#addtag');
+      if (!$form.length) {
+        return;
+      }
+      // Core clears #tag-name only when the term was actually created; if it
+      // still holds a value the add failed and the form state should stand.
+      if ($('#tag-name', $form).val()) {
+        return;
+      }
+      $('#og_image_id, #twitter_image_id', $form).val('');
+      $('#twitter_title_same_as_og, #twitter_description_same_as_og, #twitter_image_same_as_og', $form).prop('checked', false);
+      toggleTwitterFields();
+    });
+
     toggleOgImageFeatured();
     toggleTwitterFields();
   });

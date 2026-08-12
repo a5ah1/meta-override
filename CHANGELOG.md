@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-08-12
+
+### Added
+- **Content type selection** — a checkbox list on the settings page controls which post types Meta Override applies to. All public post types are enabled by default: 1.3.0 emitted for every public type on the front end (its hardcoded `post` + `page` list only governed the meta box), so a narrower default would have silenced custom post type singles on upgrade. The selection freezes into the option on first save; a type registered after that starts unticked. The meta box now appears on every enabled type, so custom post types gain it on upgrade
+- **Taxonomy support** — Meta Override fields on term add/edit screens for any selected public taxonomy, stored in term meta under the same `_mo_` keys
+- **Archive output** — category, tag, custom taxonomy, and post type archives emit the OG scaffolding, site-wide fallbacks, and `CollectionPage` schema. Off by default on every install; switch it on under *Archives*
+- **Post type archive overrides** — meta title, description, OG title, OG description, and OG image for post types registered with an archive
+- **Home page settings** — for sites showing latest posts at the root, where there is no page to attach a meta box to. Hidden when a static front page is configured, with a pointer to that page instead
+- `meta_override_supported_taxonomies` filter, mirroring the post types filter
+- `Meta_Override_Helper::get_object_meta_data()`, `get_all_term_meta_data()`, `get_supported_taxonomies()`, `get_candidate_post_types()`, `get_candidate_taxonomies()`
+- `Meta_Override_Constants::get_term_fields()`, `get_context_fields()`, `get_all_meta_keys()`
+
+### Changed
+- **`og:type` is now correct for pages.** Hierarchical post types (including `page`), the home page, the front page, and all archives emit `og:type=website`. Previously every page emitted `og:type=article` along with `article:published_time` and `article:modified_time`; those date tags are now emitted only where the context is genuinely article-like. **This changes live output on existing sites** — it is a correctness fix, not a behaviour toggle
+- Unticking a post type stops Meta Override output for it on the front end — its singles and its post type archive — not just in the admin. Values already saved are left in the database untouched and are used again if the type is re-enabled
+- Attachment pages no longer emit tags. 1.3.0 emitted for them along with every other public type; attachments are deliberately not selectable as a content type
+- Option-backed contexts (the home page and post type archives) have no separate Twitter fields — `twitter:title`, `twitter:description`, and `twitter:image` always mirror the resolved OG values there, including a fallback OG image. The home page can therefore emit a `twitter:image` that 1.3.0 did not
+- `meta_override_supported_post_types` now runs *after* the stored setting rather than being the only source. Filter-controlled types render as locked on the settings screen. Existing filter usage keeps working unchanged
+- Page context is resolved once, up front, instead of being re-derived separately for `og:type`, the Schema.org `@type`, and the canonical URL
+- `meta_override_schema_org` receives a third argument, the resolved page context
+- `uninstall.php` derives its meta key list from `Meta_Override_Constants` and sweeps `termmeta` alongside `postmeta`
+- Admin assets are enqueued on term screens deliberately rather than incidentally
+
+### Fixed
+- The blog index no longer trusts a stale `page_for_posts` when Settings → Reading is set to "Your latest posts". WordPress keeps that value after switching modes, so the home page was rendering an orphaned page's values — its title override, description, and OG fields, not just a wrong `og:url`. All of it is now ignored; sites that relied on the orphan should move those values into the new Home page settings
+- `article:published_time` and `article:modified_time` are now genuine UTC timestamps. Since 1.1.0 they carried the site-local wall-clock time with a literal `Z` (UTC) suffix, misstating the moment on any non-UTC site
+- The Schema.org `name` no longer contains HTML-entity-encoded characters when a Meta Title override with `&` or quotes is set — the JSON now carries the raw stored value instead of the string escaped for the `<title>` tag
+- A saved OG/Twitter image attachment ID whose attachment has since been deleted is now cleared on the next save instead of surviving it
+- Post and term meta caches could collide: post 12 and term 12 shared a cache key and served each other's values. Cache keys are now namespaced by object type
+- Per-post-type OG image fallbacks are no longer dropped when their post type is unticked
+- Post type slugs whose plugin is temporarily deactivated are preserved rather than silently removed from the settings
+- A partial `update_option( 'meta_override_settings', … )` no longer resets the keys it omits. Every top-level setting carries its stored value forward when absent from the input, so a programmatic update behaves as a patch; passing a value explicitly — including an empty one — still sets it. Previously any partial update blanked the site-wide OG image and the Twitter handle
+
 ## [1.3.0] - 2026-05-15
 
 ### Added
@@ -117,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[2.0.0]: https://github.com/a5ah1/meta-override/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/a5ah1/meta-override/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/a5ah1/meta-override/compare/v1.2.0...v1.2.1
 [1.1.1]: https://github.com/a5ah1/meta-override/compare/v1.1.0...v1.1.1

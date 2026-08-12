@@ -2,32 +2,32 @@
 Contributors: a5ah1
 Tags: meta tags, open graph, twitter cards, schema, seo
 Requires at least: 5.0
-Tested up to: 6.8.3
+Tested up to: 7.0.4
 Requires PHP: 7.0
-Stable tag: 1.3.0
+Stable tag: 2.0.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-Override meta tags, Open Graph data, Twitter Cards, and add Schema.org structured data for posts and pages.
+Override meta tags, Open Graph data, Twitter Cards, and add Schema.org structured data for posts, pages, custom post types, taxonomy terms, and archives.
 
 == Description ==
 
-Meta Override is a powerful yet lightweight WordPress plugin that gives you complete control over your site's meta tags, Open Graph data, Twitter Cards, and Schema.org structured data on a per-post/page basis.
+Meta Override is a lightweight WordPress plugin that gives you control over your site's meta tags, Open Graph data, Twitter Cards, and Schema.org structured data. Choose exactly which post types and taxonomies it applies to, and set site-wide fallbacks for everything else.
 
 = Key Features =
 
 **Meta Tag Management**
 
-* Override document titles and meta descriptions on a per-post/page basis
-* Character counter for meta fields to help with SEO best practices
-* Automatic fallbacks when custom values aren't set (uses post title, excerpt, etc.)
+* Override document titles and meta descriptions per post, page, custom post type, or taxonomy term
+* Character counter for the title and description fields in the post and term editors
+* Tags are emitted only when you set a value — nothing is synthesized to fill space
 
 **Open Graph Support**
 
 * Custom Open Graph titles, descriptions, and images
 * Automatic image dimensions in meta tags
 * WordPress Media Library integration for easy image selection
-* Fallback to post data when custom values aren't provided
+* Site-wide, per-post-type, and featured-image fallbacks
 
 **Twitter Card Integration**
 
@@ -47,7 +47,7 @@ Meta Override is a powerful yet lightweight WordPress plugin that gives you comp
 **Performance & Security**
 
 * Built-in caching system to prevent duplicate database queries
-* Conditional asset loading (only loads on supported post types)
+* Conditional asset loading (only on screens for enabled post types and taxonomies)
 * Comprehensive nonce verification and capability checks
 * Input sanitization and output escaping throughout
 * Directory protection with index.php files
@@ -56,16 +56,18 @@ Meta Override is a powerful yet lightweight WordPress plugin that gives you comp
 
 Meta Override provides several filters for extensibility:
 
-* `meta_override_supported_post_types` - Add support for custom post types
+* `meta_override_supported_post_types` - Add or remove post types in code
+* `meta_override_supported_taxonomies` - Add or remove taxonomies in code
 * `meta_override_schema_org` - Modify Schema.org output
 
 = Resolution rules =
 
 Meta Override emits tags only when an explicit value is available, with one exception:
 
-* Meta Description, OG Title, OG Description, Twitter Title, Twitter Description: emitted only when set on the post. If blank, the tag is omitted.
-* Open Graph Image (cascades): "Use Featured Image" on the post → per-post OG Image field → per-post-type fallback (Settings → Meta Override) → site-wide fallback → omit.
-* Twitter title/description/image with the "Same as OG…" checkbox: mirrors the resolved OG value, or is omitted if the OG value is blank.
+* Meta Description, OG Title, OG Description, Twitter Title, Twitter Description: emitted only when set on the post, term, or context (home page / post type archive settings). If blank, the tag is omitted.
+* Open Graph Image (cascades): "Use Featured Image" on the post → per-post or per-term OG Image field → per-post-type fallback (applies to posts and the Posts page) → site-wide fallback → omit.
+* Twitter title/description/image with the "Same as OG…" checkbox: mirrors the resolved OG value, or is omitted if the OG value is blank. Home page and post type archive values always mirror their OG values.
+* og:type: flat post types emit `article` with `article:published_time` / `article:modified_time`; hierarchical types, the home page, the front page, and all archives emit `website` with no date tags.
 
 == Installation ==
 
@@ -78,7 +80,7 @@ Meta Override emits tags only when an explicit value is available, with one exce
 
 = Does this work with custom post types? =
 
-Yes! Use the `meta_override_supported_post_types` filter to add your custom post types:
+Yes — all public post types are enabled by default, and you can change the selection under *Settings → Meta Override → Content types*. The `meta_override_supported_post_types` filter still works and runs after the checkboxes, so it has the final say:
 
 `add_filter('meta_override_supported_post_types', function($post_types) {
     $post_types[] = 'product';
@@ -91,19 +93,19 @@ Meta Override outputs its tags with high priority. If you're using another SEO p
 
 = What if I don't fill in all the fields? =
 
-No problem! The plugin provides intelligent fallbacks using your post title, excerpt, and WordPress defaults.
+Tags you leave blank are simply omitted — nothing is synthesized from your content to fill space. The one cascade is the OG image, which falls back from the post's own value to the per-post-type and site-wide defaults set under Settings → Meta Override.
 
 = Can I use this for the blog homepage? =
 
-Yes! The plugin automatically detects the "Posts page" setting in WordPress and allows you to override meta tags for it.
+Yes. If a Posts page is assigned under Settings → Reading, edit that page's Meta Override box. If your site shows the latest posts at the root, use the Home page section under Settings → Meta Override instead.
 
 = Does this affect my site's performance? =
 
-No. The plugin includes a built-in caching system and only loads admin assets on edit screens for supported post types.
+No. The plugin includes a built-in caching system and only loads admin assets on edit screens for enabled post types and taxonomies.
 
 = What happens to my data when I uninstall the plugin? =
 
-When you delete the plugin through WordPress admin, all meta data (with `_mo_` prefix) is automatically removed from your database. Note: Deactivating does NOT remove data, only uninstalling does.
+When you delete the plugin through WordPress admin, all of its post meta and term meta (keys with the `_mo_` prefix) and the `meta_override_settings` option are removed from your database. Note: Deactivating does NOT remove data, only uninstalling does.
 
 == Screenshots ==
 
@@ -113,6 +115,18 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 4. Twitter Card fields with sync options
 
 == Changelog ==
+
+= 2.0.0 =
+* Added: choose which post types Meta Override applies to, from the settings page. All public post types are enabled by default, matching what previous versions emitted for
+* Added: Meta Override fields on taxonomy term screens
+* Added: output on category, tag, custom taxonomy, and post type archives (off by default)
+* Added: home page settings for sites that show latest posts at the root
+* Changed: pages and front pages now emit `og:type=website` instead of `article`, and no longer emit `article:published_time` / `article:modified_time`. This changes live output
+* Changed: unticking a post type stops output for it on the front end — its singles and its post type archive; saved values are kept
+* Changed: attachment pages no longer emit tags (attachments are not selectable as a content type)
+* Fixed: a stale `page_for_posts` no longer feeds the home page after switching Reading back to "latest posts" — the orphaned page's values are ignored entirely; use the new Home page settings instead
+* Fixed: `article:published_time` / `article:modified_time` are now genuine UTC timestamps; previously they carried local time with a UTC marker
+* Fixed: post and term meta caches could collide on matching IDs
 
 = 1.3.0 =
 * Added Settings → Meta Override page for site-wide configuration, with contextual help tabs (Overview, Settings reference, Developers)
@@ -151,6 +165,9 @@ When you delete the plugin through WordPress admin, all meta data (with `_mo_` p
 
 == Upgrade Notice ==
 
+= 2.0.0 =
+Adds custom post type, taxonomy, and archive support. All public post types are enabled by default, matching previous front-end behaviour, and saved values carry over unchanged. Pages now emit og:type=website rather than article, attachment pages no longer emit tags, and article timestamps are now true UTC — correctness fixes that change live output.
+
 = 1.3.0 =
 New Settings page with site-wide and per-post-type OG image fallbacks, plus a twitter:site handle. **Behavior change**: meta description, og:title, og:description, and Twitter title/description are now emitted only when set on the post. If you relied on the previous auto-fill (post excerpt, post title, site tagline), set those fields explicitly or those tags will be absent.
 
@@ -170,7 +187,7 @@ Performance improvements and enhanced security validation. Recommended update fo
 
 = meta_override_supported_post_types =
 
-Add support for custom post types:
+Add or remove post types in code. Runs after the Content types setting, so it has the final say; filter-controlled types show as locked on the settings screen:
 
 `add_filter('meta_override_supported_post_types', function($post_types) {
     $post_types[] = 'product';
@@ -178,11 +195,20 @@ Add support for custom post types:
     return $post_types;
 });`
 
+= meta_override_supported_taxonomies =
+
+The same arrangement for taxonomies:
+
+`add_filter('meta_override_supported_taxonomies', function($taxonomies) {
+    $taxonomies[] = 'product_cat';
+    return $taxonomies;
+});`
+
 = meta_override_schema_org =
 
-Customize Schema.org structured data:
+Customize Schema.org structured data. Receives the schema array, the post ID (0 where the context has no post), and the resolved page context:
 
-`add_filter('meta_override_schema_org', function($schema, $post_id) {
+`add_filter('meta_override_schema_org', function($schema, $post_id, $context) {
     $schema['publisher'] = array(
         '@type' => 'Organization',
         'name' => 'Your Company',
@@ -192,11 +218,11 @@ Customize Schema.org structured data:
         )
     );
     return $schema;
-}, 10, 2);`
+}, 10, 3);`
 
 == Database Storage ==
 
-All meta data is stored with the `_mo_` prefix:
+Per-post and per-term values are stored as post meta and term meta with the `_mo_` prefix:
 
 * `_mo_meta_title`
 * `_mo_meta_description`
@@ -212,6 +238,8 @@ All meta data is stored with the `_mo_` prefix:
 * `_mo_twitter_title_same_as_og`
 * `_mo_twitter_description_same_as_og`
 * `_mo_twitter_image_same_as_og`
+
+Site-wide fallbacks, the content type and taxonomy selection, home page values, and post type archive overrides live in a single `meta_override_settings` option. Uninstalling removes all of the above.
 
 == Support ==
 

@@ -83,6 +83,7 @@ class Meta_Override
     $this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
     $this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_meta_boxes');
     $this->loader->add_action('save_post', $plugin_admin, 'save_meta_data');
+    $this->loader->add_action('admin_init', $plugin_admin, 'register_term_fields');
 
     $plugin_settings = new Meta_Override_Settings($this->get_plugin_name(), $this->get_version());
     $this->loader->add_action('admin_init', $plugin_settings, 'register_settings');

@@ -21,12 +21,31 @@ class Meta_Override_Constants
   const SETTINGS_OPTION = 'meta_override_settings';
 
   /**
+   * Object types this plugin can store meta against
+   *
+   * @since 2.0.0
+   */
+  const OBJECT_POST = 'post';
+  const OBJECT_TERM = 'term';
+
+  /**
    * Settings keys (used inside the SETTINGS_OPTION array)
    */
   const SETTING_OG_IMAGE_URL = 'og_image_url';
   const SETTING_OG_IMAGE_ID = 'og_image_id';
   const SETTING_OG_IMAGE_BY_POST_TYPE = 'og_image_by_post_type';
   const SETTING_TWITTER_SITE = 'twitter_site';
+
+  /**
+   * Settings keys added in 2.0.0
+   *
+   * @since 2.0.0
+   */
+  const SETTING_POST_TYPES = 'post_types';
+  const SETTING_TAXONOMIES = 'taxonomies';
+  const SETTING_ARCHIVES_ENABLED = 'archives_enabled';
+  const SETTING_HOME = 'home';
+  const SETTING_ARCHIVE_META = 'archive_meta';
 
   /**
    * Field name constants
@@ -73,6 +92,45 @@ class Meta_Override_Constants
   }
 
   /**
+   * Get the fields that apply to taxonomy terms
+   *
+   * Terms have no featured image, so the "Use Featured Image" opt-in is
+   * meaningless for them. Everything else carries over unchanged.
+   *
+   * @return array Array of field names valid for terms
+   * @since 2.0.0
+   */
+  public static function get_term_fields()
+  {
+    return array_values(array_diff(
+      self::get_all_fields(),
+      array(self::FIELD_OG_IMAGE_USE_FEATURED)
+    ));
+  }
+
+  /**
+   * Get the fields available on option-backed contexts (home, post type archives)
+   *
+   * These contexts have no object to attach post/term meta to, so their values
+   * live in the settings array. Twitter title/description mirror the OG values
+   * for these contexts rather than carrying a separate field set.
+   *
+   * @return array Array of field names
+   * @since 2.0.0
+   */
+  public static function get_context_fields()
+  {
+    return array(
+      self::FIELD_META_TITLE,
+      self::FIELD_META_DESCRIPTION,
+      self::FIELD_OG_TITLE,
+      self::FIELD_OG_DESCRIPTION,
+      self::FIELD_OG_IMAGE,
+      self::FIELD_OG_IMAGE_ID,
+    );
+  }
+
+  /**
    * Get the meta key for a field (adds prefix)
    *
    * @param string $field The field name
@@ -82,6 +140,20 @@ class Meta_Override_Constants
   public static function get_meta_key($field)
   {
     return self::META_PREFIX . $field;
+  }
+
+  /**
+   * Get every meta key this plugin writes, for both posts and terms
+   *
+   * Used by uninstall.php so the cleanup list can never drift from the
+   * field definitions above.
+   *
+   * @return array Array of prefixed meta keys
+   * @since 2.0.0
+   */
+  public static function get_all_meta_keys()
+  {
+    return array_map(array(__CLASS__, 'get_meta_key'), self::get_all_fields());
   }
 
   /**
